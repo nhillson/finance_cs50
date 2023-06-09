@@ -51,16 +51,19 @@ def index():
         total_value = float(info["price"]) * shares
         grand_total += float(total_value)
         total_value = usd(total_value)
-        owned_info.append({
-            "symbol": symbol,
-            "shares": shares,
-            "price": price,
-            "value": total_value
-        })
+        owned_info.append(
+            {"symbol": symbol, "shares": shares, "price": price, "value": total_value}
+        )
     total_total = usd(float(grand_total) + float(cash))
     grand_total = usd(grand_total)
     cash = usd(cash)
-    return render_template("/index.html", owned_info=owned_info, grand_total=grand_total, cash=cash, total_total=total_total)
+    return render_template(
+        "/index.html",
+        owned_info=owned_info,
+        grand_total=grand_total,
+        cash=cash,
+        total_total=total_total,
+    )
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -68,7 +71,6 @@ def index():
 def buy():
     """Buy shares of stock"""
     if request.method == "GET":
-
         return render_template("buy.html")
 
     # If form submitted
@@ -86,7 +88,7 @@ def buy():
             return apology("Number of shares must be a positive integer", 400)
         # assign SQL args to variables
         try:
-            symbol = info["name"]
+            symbol = info["symbol"]
         except TypeError:
             return apology("stock does not exist", 400)
         price = float(info["price"])
@@ -102,33 +104,63 @@ def buy():
         # update cash value
         db.execute("UPDATE users SET cash=? WHERE id=?", cash, user_id)
         # get info on already owned shares of same company and determine if exists
-        owned = db.execute("SELECT * FROM stock_totals WHERE user_id=? AND symbol=?", user_id, symbol)
+        owned = db.execute(
+            "SELECT * FROM stock_totals WHERE user_id=? AND symbol=?", user_id, symbol
+        )
         try:
             total_shares = owned[0]["shares"] + shares
         # if user doesn't already own shares
         # create new rows in totals and transactions tables with info
         except IndexError:
             if len(owned) != 1:
-                db.execute("INSERT INTO stock_totals(user_id, symbol, shares) VALUES (?, ?, ?)", user_id, symbol, shares)
-                db.execute("INSERT INTO transactions (user_id, symbol, price, shares, transaction_type) VALUES(?, ?, ?, ?, ?)", user_id, symbol, price, shares, 0)
+                db.execute(
+                    "INSERT INTO stock_totals(user_id, symbol, shares) VALUES (?, ?, ?)",
+                    user_id,
+                    symbol,
+                    shares,
+                )
+                db.execute(
+                    "INSERT INTO transactions (user_id, symbol, price, shares, transaction_type) VALUES(?, ?, ?, ?, ?)",
+                    user_id,
+                    symbol,
+                    price,
+                    shares,
+                    0,
+                )
                 return redirect("/")
         # if user owns share(s) already
         # create new row in purchases table
         # update transactions total table
-        db.execute("INSERT INTO transactions (user_id, symbol, price, shares, transaction_type) VALUES(?, ?, ?, ?, ?)", user_id, symbol, price, shares, 0)
-        db.execute("UPDATE stock_totals SET shares=? WHERE user_id=? AND symbol=?", total_shares, user_id, symbol)
+        db.execute(
+            "INSERT INTO transactions (user_id, symbol, price, shares, transaction_type) VALUES(?, ?, ?, ?, ?)",
+            user_id,
+            symbol,
+            price,
+            shares,
+            0,
+        )
+        db.execute(
+            "UPDATE stock_totals SET shares=? WHERE user_id=? AND symbol=?",
+            total_shares,
+            user_id,
+            symbol,
+        )
         # send to homepage
         return redirect("/")
-
 
 
 @app.route("/history")
 @login_required
 def history():
-    purchases = db.execute("SELECT * FROM transactions WHERE user_id=? AND transaction_type=0 ORDER BY transaction_time", session["user_id"])
-    sales = db.execute("SELECT * FROM transactions WHERE user_id=? AND transaction_type=1 ORDER BY transaction_time", session["user_id"])
+    purchases = db.execute(
+        "SELECT * FROM transactions WHERE user_id=? AND transaction_type=0 ORDER BY transaction_time",
+        session["user_id"],
+    )
+    sales = db.execute(
+        "SELECT * FROM transactions WHERE user_id=? AND transaction_type=1 ORDER BY transaction_time",
+        session["user_id"],
+    )
     return render_template("/history.html", purchases=purchases, sales=sales)
-
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -140,7 +172,6 @@ def login():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
         # Ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username", 400)
@@ -150,10 +181,14 @@ def login():
             return apology("must provide password", 400)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        rows = db.execute(
+            "SELECT * FROM users WHERE username = ?", request.form.get("username")
+        )
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        if len(rows) != 1 or not check_password_hash(
+            rows[0]["hash"], request.form.get("password")
+        ):
             return apology("invalid username and/or password", 400)
 
         # Remember which user has logged in
@@ -183,7 +218,6 @@ def logout():
 def quote():
     """Get stock quote."""
     if request.method == "GET":
-
         return render_template("quote.html")
 
     elif request.method == "POST":
@@ -204,8 +238,9 @@ def register():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
-        password_pattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
+        password_pattern = (
+            "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
+        )
 
         # Ensure username was submitted
         if not request.form.get("username"):
@@ -228,11 +263,19 @@ def register():
             return apology("password does not meet requirements", 400)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        rows = db.execute(
+            "SELECT * FROM users WHERE username = ?", request.form.get("username")
+        )
 
         # Ensure username doesn't exist
         if len(rows) != 1:
-            db.execute("INSERT INTO users (username, hash) VALUES(?, ?)", request.form.get("username"), generate_password_hash(request.form.get("password"), method="sha256", salt_length=8))
+            db.execute(
+                "INSERT INTO users (username, hash) VALUES(?, ?)",
+                request.form.get("username"),
+                generate_password_hash(
+                    request.form.get("password"), method="sha256", salt_length=8
+                ),
+            )
         else:
             return apology("username already exists", 400)
 
@@ -248,9 +291,13 @@ def register():
 @login_required
 def sell():
     if request.method == "GET":
-
-        return render_template("sell.html")
-
+        info = db.execute(
+            "SELECT symbol FROM stock_totals WHERE user_id=?", session["user_id"]
+        )
+        symbols = []
+        for inf in info:
+            symbols.append(inf["symbol"])
+        return render_template("sell.html", symbols=symbols)
 
     elif request.method == "POST":
         # Assign user_id and info to variables
@@ -265,12 +312,14 @@ def sell():
             return apology("Number of shares must be a positive integer", 400)
         # Get info from info var, assign to variables
         try:
-            symbol = info["name"]
+            symbol = info["symbol"]
         except TypeError:
             return apology("Stock does not exist", 400)
         price = float(info["price"])
-        owned = db.execute("SELECT * FROM stock_totals WHERE user_id=? AND symbol=?", user_id, symbol)
-        #check for enough shares
+        owned = db.execute(
+            "SELECT * FROM stock_totals WHERE user_id=? AND symbol=?", user_id, symbol
+        )
+        # check for enough shares
         try:
             if owned[0]["shares"] < shares:
                 return apology("You don't own enough shares of that stock", 400)
@@ -284,6 +333,18 @@ def sell():
         cash += sale_value
         cash = f"{cash:.2f}"
         db.execute("UPDATE users SET cash=? WHERE id=?", cash, user_id)
-        db.execute("INSERT INTO transactions (user_id, symbol, shares, price, transaction_type) VALUES(?, ?, ?, ?, ?)", user_id, symbol, shares, price, 1)
-        db.execute("UPDATE stock_totals SET shares=? WHERE user_id=? AND symbol=?", total_shares, user_id, symbol)
+        db.execute(
+            "INSERT INTO transactions (user_id, symbol, shares, price, transaction_type) VALUES(?, ?, ?, ?, ?)",
+            user_id,
+            symbol,
+            shares,
+            price,
+            1,
+        )
+        db.execute(
+            "UPDATE stock_totals SET shares=? WHERE user_id=? AND symbol=?",
+            total_shares,
+            user_id,
+            symbol,
+        )
         return redirect("/")
