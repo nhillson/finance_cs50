@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block main %}
+    <table>
+        <caption>Purchases</caption>
+        <tr>
+            <th>Symbol</th>
+            <th>Number of Shares</th>
+            <th>Price</th>
+            <th>Transaction Time</th>
+        </tr>
+        {% for purchase in purchases %}
+
+            <tr>
+                <td>{{ purchase.symbol }}</td>
+                <td>{{ purchase.shares }}</td>
+                <td>{{ purchase.price }}</td>
+                <td>{{ purchase.transaction_time }}</td>
+            </tr>
+
+        {% endfor %}
+    </table>
+    <br>
+    <table>
+        <caption>Sales</caption>
+        <tr>
+            <th>Symbol</th>
+            <th>Number of Shares</th>
+            <th>Price</th>
+            <th>Transaction Time</th>
+        </tr>
+        {% for sale in sales %}
+
+            <tr>
+                <td>{{ sale.symbol }}</td>
+                <td>{{ sale.shares }}</td>
+                <td>{{ sale.price }}</td>
+                <td>{{ sale.transaction_time }}</td>
+            </tr>
+
+        {% endfor %}
+    </table>
+{% endblock %}

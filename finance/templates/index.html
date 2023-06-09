@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block main %}
+    <table>
+        <caption>Current Data</caption>
+        <tr>
+            <th>Symbol</th>
+            <th>Number of Shares</th>
+            <th>Current Price</th>
+            <th>Total Value</th>
+        </tr>
+        {% for stock in owned_info %}
+
+            <tr>
+                <td>{{ stock.symbol }}</td>
+                <td>{{ stock.shares }}</td>
+                <td>{{ stock.price }}</td>
+                <td>{{ stock.value }}</td>
+            </tr>
+
+        {% endfor %}
+    </table>
+    Cash On Hand: {{ cash }}
+    Value Of Shares:  {{ grand_total }}
+    <br>
+    Total Value: {{ total_total }}
+{% endblock %}
